@@ -1,0 +1,14 @@
+$ORIGIN .
+$TTL 604800	; 1 week
+247.7.10.in-addr.arpa	IN SOA	nemo.quarknet. sjm. (
+				7162       ; serial
+				604800     ; refresh (1 week)
+				86400      ; retry (1 day)
+				2419200    ; expire (4 weeks)
+				604800     ; minimum (1 week)
+				)
+			NS	nemo.quarknet.
+$ORIGIN 247.7.10.in-addr.arpa.
+$TTL 21600	; 6 hours
+10			PTR nemo.quarknet.
+12			PTR darwin.quarknet.

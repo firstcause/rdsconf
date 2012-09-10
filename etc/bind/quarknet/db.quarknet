@@ -1,0 +1,17 @@
+$ORIGIN .
+$TTL 604800	; 1 week
+quarknet		IN SOA	nemo.quarknet. sjm. (
+				10206      ; serial
+				604800     ; refresh (1 week)
+				86400      ; retry (1 day)
+				2419200    ; expire (4 weeks)
+				604800     ; minimum (1 week)
+				)
+			NS	nemo.quarknet.
+			A	10.7.247.10
+$ORIGIN quarknet.
+crypuppy		A	10.7.247.11
+			TXT	"00702a798879d2f783d3d23001e0e7a4d9"
+$TTL 43200	; 12 hours
+darwin			A	10.7.247.12
+nemo			A	10.7.247.10

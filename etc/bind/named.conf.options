@@ -1,0 +1,23 @@
+options {
+	directory "/var/cache/flashtemp/bind";
+	flush-zones-on-shutdown yes;
+	
+	// If there is a firewall between you and nameservers you want
+	// to talk to, you may need to fix the firewall to allow multiple
+	// ports to talk.  See http://www.kb.cert.org/vuls/id/800113
+
+	// If your ISP provided one or more IP addresses for stable 
+	// nameservers, you probably want to use them as forwarders.  
+	// Uncomment the following block, and insert the addresses replacing 
+	// the all-0's placeholder.
+
+	forwarders {
+		10.7.247.1;
+	};
+
+	auth-nxdomain no;    # conform to RFC1035
+	listen-on { 10.7.247.10; 127.0.0.1; };
+	max-journal-size 32767;
+
+};
+

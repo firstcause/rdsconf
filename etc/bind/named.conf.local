@@ -1,0 +1,54 @@
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+
+include "/etc/bind/quarknet/quarknet.zone.key";
+
+zone	"quarknet." IN
+{
+	type		master;
+	file		"db.quarknet";
+
+	allow-update
+	{
+		key	quarknet;
+	};
+};
+
+zone	"247.7.10.in-addr.arpa." IN
+{ 
+	type		master; 
+	file		"db.247.7.10.in-addr.arpa"; 
+
+	allow-update
+	{
+		key	quarknet;
+	};
+};
+
+key "rndc-key" {
+	algorithm hmac-md5;
+	secret "6wOoQ8QY7NFImWH+N1Du+g==";
+};
+
+controls {
+	inet 127.0.0.1 port 953
+	allow { 127.0.0.1; } keys { "rndc-key"; };
+};
+
+//zone	"rignet." IN
+//{
+//	type		slave;
+//
+//	masters
+//	{
+//			10.7.247.12;
+//	};
+
+//	file		"/etc/bind/db.rignet";
+
+//};

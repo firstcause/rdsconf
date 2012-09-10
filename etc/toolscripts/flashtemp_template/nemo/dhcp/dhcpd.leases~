@@ -1,0 +1,206 @@
+# The format of this file is documented in the dhcpd.leases(5) manual page.
+# This lease file was written by isc-dhcp-4.1.1-P1
+
+lease 10.7.247.104 {
+  starts 6 2012/06/09 23:25:33;
+  ends 6 2012/06/09 23:27:33;
+  cltt 6 2012/06/09 23:25:33;
+  binding state free;
+  hardware ethernet f0:a2:25:7a:ff:ba;
+  client-hostname "kindle-45cd56d82";
+}
+lease 10.7.247.105 {
+  starts 0 2012/06/10 00:29:33;
+  ends 0 2012/06/10 03:34:58;
+  tstp 0 2012/06/10 03:34:58;
+  cltt 0 2012/06/10 00:29:33;
+  binding state free;
+  hardware ethernet 00:24:8d:bc:14:84;
+  uid "\001\000$\215\274\024\204";
+}
+lease 10.7.247.140 {
+  starts 2 2012/06/12 01:41:21;
+  ends 2 2012/06/12 13:41:21;
+  tstp 2 2012/06/12 13:41:21;
+  cltt 2 2012/06/12 01:41:21;
+  binding state free;
+  hardware ethernet 00:01:2e:3a:56:e4;
+  uid "\001\000\001.:V\344";
+}
+lease 10.7.247.109 {
+  starts 2 2012/06/12 04:45:17;
+  ends 2 2012/06/12 16:45:17;
+  tstp 2 2012/06/12 16:45:17;
+  cltt 2 2012/06/12 04:45:17;
+  binding state free;
+  hardware ethernet 00:1d:e0:3e:4a:53;
+  uid "\001\000\035\340>JS";
+}
+lease 10.7.247.108 {
+  starts 2 2012/06/12 04:59:07;
+  ends 2 2012/06/12 16:59:07;
+  tstp 2 2012/06/12 16:59:07;
+  cltt 2 2012/06/12 04:59:07;
+  binding state free;
+  hardware ethernet f0:a2:25:3f:9d:6c;
+}
+lease 10.7.247.110 {
+  starts 2 2012/06/12 10:02:40;
+  ends 2 2012/06/12 22:02:40;
+  cltt 2 2012/06/12 10:02:40;
+  binding state active;
+  next binding state free;
+  hardware ethernet 74:f0:6d:70:53:02;
+  uid "\001t\360mpS\002";
+  client-hostname "hollywood";
+}
+lease 10.7.247.106 {
+  starts 2 2012/06/12 11:22:45;
+  ends 2 2012/06/12 23:22:45;
+  cltt 2 2012/06/12 11:22:45;
+  binding state active;
+  next binding state free;
+  hardware ethernet 38:59:f9:75:bf:66;
+  uid "\0018Y\371u\277f";
+  set ddns-rev-name = "106.247.7.10.in-addr.arpa.";
+  set ddns-txt = "3143c0f4a5911fde2f5ba26570f7501a06";
+  set ddns-fwd-name = "titan.quarknet";
+  client-hostname "titan";
+}
+lease 10.7.247.178 {
+  starts 2 2012/06/12 11:32:51;
+  ends 2 2012/06/12 23:32:51;
+  cltt 2 2012/06/12 11:32:51;
+  binding state active;
+  next binding state free;
+  hardware ethernet 00:24:be:57:48:16;
+  client-hostname "(none)";
+}
+lease 10.7.247.107 {
+  starts 2 2012/06/12 14:23:40;
+  ends 3 2012/06/13 02:23:40;
+  cltt 2 2012/06/12 14:23:40;
+  binding state active;
+  next binding state free;
+  hardware ethernet 00:0e:08:2e:c7:00;
+  uid "\001\000\016\010.\307\000";
+  set ddns-rev-name = "107.247.7.10.in-addr.arpa.";
+  set ddns-txt = "31d8df5733abf18702fc19e140b1523491";
+  set ddns-fwd-name = "SipuraSPA.quarknet";
+  client-hostname "SipuraSPA";
+}
+lease 10.7.247.174 {
+  starts 2 2012/06/12 16:10:38;
+  ends 3 2012/06/13 04:10:38;
+  cltt 2 2012/06/12 16:10:38;
+  binding state active;
+  next binding state free;
+  hardware ethernet 68:a3:c4:7d:d0:ff;
+  uid "\001h\243\304}\320\377";
+  set ddns-rev-name = "174.247.7.10.in-addr.arpa.";
+  set ddns-client-fqdn = "viking.quarknet";
+  client-hostname "viking";
+}
+lease 10.7.247.103 {
+  starts 2 2012/06/12 17:46:00;
+  ends 3 2012/06/13 05:46:00;
+  cltt 2 2012/06/12 17:46:00;
+  binding state active;
+  next binding state free;
+  hardware ethernet f0:a2:25:07:71:2c;
+  set ddns-rev-name = "103.247.7.10.in-addr.arpa.";
+  set ddns-txt = "0021a95f2af04bb9945dc641b745cd5e89";
+  set ddns-fwd-name = "kindle-ceacda90c.quarknet";
+  client-hostname "kindle-ceacda90c";
+}
+lease 10.7.247.102 {
+  starts 2 2012/06/12 18:14:08;
+  ends 3 2012/06/13 06:14:08;
+  cltt 2 2012/06/12 18:14:08;
+  binding state active;
+  next binding state free;
+  hardware ethernet e0:2a:82:3d:89:ef;
+  uid "\001\340*\202=\211\357";
+  set ddns-rev-name = "102.247.7.10.in-addr.arpa.";
+  set ddns-txt = "31b6749d70aa31d2aac6df3d58b3ee425b";
+  set ddns-fwd-name = "neytiri.quarknet";
+  client-hostname "neytiri";
+}
+lease 10.7.247.100 {
+  starts 2 2012/06/12 18:49:48;
+  ends 3 2012/06/13 06:49:48;
+  cltt 2 2012/06/12 18:49:48;
+  binding state active;
+  next binding state free;
+  hardware ethernet 00:18:de:cf:a1:d7;
+  uid "\001\000\030\336\317\241\327";
+  set ddns-rev-name = "100.247.7.10.in-addr.arpa.";
+  set ddns-txt = "31568a7edf611a83fe365f50ab4e370c9e";
+  set ddns-fwd-name = "Aggie-PC.quarknet";
+  client-hostname "Aggie-PC";
+}
+lease 10.7.247.101 {
+  starts 2 2012/06/12 18:54:08;
+  ends 3 2012/06/13 06:54:08;
+  cltt 2 2012/06/12 18:54:08;
+  binding state active;
+  next binding state free;
+  hardware ethernet e0:2a:82:41:f8:88;
+  uid "\001\340*\202A\370\210";
+  set ddns-rev-name = "101.247.7.10.in-addr.arpa.";
+  set ddns-txt = "31248737dffb1fc21e82ef9932cbe73d85";
+  set ddns-fwd-name = "Kiri.quarknet";
+  client-hostname "Kiri";
+}
+lease 10.7.247.115 {
+  starts 2 2012/06/12 19:49:57;
+  ends 3 2012/06/13 07:49:57;
+  cltt 2 2012/06/12 19:49:57;
+  binding state active;
+  next binding state free;
+  hardware ethernet 00:23:54:a4:5a:a3;
+  set ddns-rev-name = "115.247.7.10.in-addr.arpa.";
+  set ddns-txt = "00002982e39f338cc6846feeae5504d5f3";
+  set ddns-fwd-name = "hadron.quarknet";
+  client-hostname "hadron";
+}
+server-duid "\000\001\000\001\027e\262U\000@c\3601\026";
+
+lease 10.7.247.107 {
+  starts 2 2012/06/12 20:23:40;
+  ends 3 2012/06/13 08:23:40;
+  cltt 2 2012/06/12 20:23:40;
+  binding state active;
+  next binding state free;
+  hardware ethernet 00:0e:08:2e:c7:00;
+  uid "\001\000\016\010.\307\000";
+  set ddns-rev-name = "107.247.7.10.in-addr.arpa.";
+  set ddns-txt = "31d8df5733abf18702fc19e140b1523491";
+  set ddns-fwd-name = "SipuraSPA.quarknet";
+  client-hostname "SipuraSPA";
+}
+lease 10.7.247.103 {
+  starts 2 2012/06/12 20:25:03;
+  ends 3 2012/06/13 08:25:03;
+  cltt 2 2012/06/12 20:25:03;
+  binding state active;
+  next binding state free;
+  hardware ethernet f0:a2:25:07:71:2c;
+  set ddns-rev-name = "103.247.7.10.in-addr.arpa.";
+  set ddns-txt = "0021a95f2af04bb9945dc641b745cd5e89";
+  set ddns-fwd-name = "kindle-ceacda90c.quarknet";
+  client-hostname "kindle-ceacda90c";
+}
+lease 10.7.247.107 {
+  starts 2 2012/06/12 21:32:03;
+  ends 3 2012/06/13 09:32:03;
+  cltt 2 2012/06/12 21:32:03;
+  binding state active;
+  next binding state free;
+  hardware ethernet 00:0e:08:2e:c7:00;
+  uid "\001\000\016\010.\307\000";
+  set ddns-rev-name = "107.247.7.10.in-addr.arpa.";
+  set ddns-txt = "31d8df5733abf18702fc19e140b1523491";
+  set ddns-fwd-name = "SipuraSPA.quarknet";
+  client-hostname "SipuraSPA";
+}

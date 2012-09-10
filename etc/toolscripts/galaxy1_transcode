@@ -1,0 +1,27 @@
+#!/bin/sh
+
+JOBUUID=$1
+FILESPEC=$2
+TEMPFOLDER=$3
+
+NAMEPART=${FILESPEC%.*}
+
+LOGMSG="logger -t galaxy1_transcode:$JOBUUID:"
+
+$LOGMSG "     Job UUID: $JOBUUID"
+$LOGMSG "  Source File: $FILESPEC"
+$LOGMSG "    Name part: $NAMEPART"
+$LOGMSG "  Target Spec: $TEMPFOLDER/$NEWSPEC"
+
+if ffmpeg -y -loglevel quiet -i $FILESPEC -vcodec libx264 -r 30 -crf 21 -acodec libfaac -ab 96k -threads 0 $TEMPFOLDER/$NAMEPART.mp4
+then
+	$LOGMSG "Transcode completed successfully..."
+	exit 0
+fi
+
+$LOGMSG "FAILED! Transcode error..."
+
+exit 1
+
+
+	

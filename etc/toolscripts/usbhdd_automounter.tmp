@@ -1,0 +1,99 @@
+#!/bin/bash
+
+NAME=udev_automount_usb_hdd
+
+PARMS_FILE=/etc/udev_automount_usb_hdd.list
+
+LOGMSG=logger $NAME
+
+process_action_add()
+{
+    local DISKUUID
+    
+    local MOUNTOPTS
+
+    local MOUNTPOINT
+
+    while read DISKUUID MOUNTOPTS MOUNTPOINT; do
+
+		$LOGMSG "Unmounting $DISKUUID at $MOUNTPOINT, options: $MOUNTOPTS"
+
+        unmount_uuid $DISKUUID $MOUNTPOINT
+
+    done
+}
+
+process_action_remove()
+{
+    local DISKUUID
+    
+    local MOUNTOPTS
+
+    local MOUNTPOINT
+
+    while read DISKUUID MOUNTOPTS MOUNTPOINT; do
+
+        $LOGMSG "Unmounting $DISKUUID at $MOUNTPOINT, options: $MOUNTOPTS"
+
+		unmount_uuid $DISKUUID $MOUNTPOINT
+
+    done
+}
+
+do_action_add()
+{
+	if [ ! -f $PARMS_FILE ]
+	then
+		$LOGMSG "No tweak file to process..." "$NAME"
+		return 1
+	fi
+
+	process_action_add < $PARMS_FILE
+
+	return 0
+}
+
+do_action_remove()
+{
+	if [ ! -f $PARMS_FILE ];
+	then
+
+		$LOGMSG "STOP: $NAME: No tweak file to process..." "$NAME"
+
+		return 1
+	fi
+
+	process_action_remove < $PARMS_FILE
+
+	return 0
+}
+
+echo "Verbose: $VERBOSE"
+
+VERBOSE=yes
+
+case "$1" in
+  add)
+	[ "$VERBOSE" != no ] && $LOGMSG "Invoked with action=ADD"
+	do_action_add
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && $LOGMSG "Exiting with status" 0 ;;
+		2) [ "$VERBOSE" != no ] && $LOGMSG "Exiting with status" 1 ;;
+	esac
+	;;
+  remove)
+	[ "$VERBOSE" != no ] && $LOGMSG "Invoked with action=REMOVE"
+	do_action_remove
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && $LOGMSG "Exiting with status" 0 ;;
+		2) [ "$VERBOSE" != no ] && $LOGMSG "Exiting with status" 1 ;;
+	esac
+	;;
+  *)
+	#echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+	exit 3
+	;;
+esac
+
+:

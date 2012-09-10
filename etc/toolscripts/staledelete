@@ -1,0 +1,26 @@
+#!/bin/sh
+# delete stale date-coded files, format YYYYMMDD
+
+let DAYSTOKEEP=$1
+let NOWSECOND=$( date +%s )
+
+if [ ! -d "$2" ]; then
+	echo "Error, folder $2 does not exist, exiting."
+	
+	exit 1
+fi
+
+for(( i=10; i > 0; --i ))
+do
+	let X=($DAYSTOKEEP+i)*86400
+
+	let STALEBACKUPSTAMP=$NOWSECOND-$X
+
+	STALEBACKUPDATE=$( date -d @$STALEBACKUPSTAMP +%Y%m%d )
+
+	echo "Deleting: $2/$STALEBACKUPDATE*"
+	
+	rm -v -f $2/$STALEBACKUPDATE*
+done
+
+	

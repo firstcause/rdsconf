@@ -1,0 +1,17 @@
+# The format of this file is documented in the dhcpd.leases(5) manual page.
+# This lease file was written by isc-dhcp-4.1.1-P1
+
+lease 10.7.247.114 {
+  starts 4 2012/01/19 05:59:22;
+  ends 4 2012/01/19 17:59:22;
+  tstp 4 2012/01/19 17:59:22;
+  cltt 4 2012/01/19 05:59:22;
+  binding state free;
+  hardware ethernet 00:21:47:b5:ba:f9;
+  uid "\001\000!G\265\272\371";
+  set ddns-fwd-name = "Wii.quarknet";
+  set ddns-txt = "31fa0e41c922dfd5757907a3dfc26d586e";
+  set ddns-rev-name = "114.247.7.10.in-addr.arpa.";
+}
+server-duid "\000\001\000\001\026\252m\035\000@c\3601\025";
+

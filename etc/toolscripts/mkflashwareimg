@@ -1,0 +1,45 @@
+#!/bin/sh
+
+IMAGEMEGS="$1"
+UIMAGESPEC="$2"
+ROOTFOLDER="$3"
+
+UIMAGESIZE=$( stat -c%s "$UIMAGESPEC" )
+
+echo "Size of uImage: $UIMAGESIZE bytes"
+
+MEGS=$( expr $( expr $UIMAGESIZE / 1048576 ) + 1 )
+
+echo "uImage megs: $MEGS"
+
+if [ $MEGS -gt $IMAGEMEGS ]
+then
+	echo "ERROR: The uImage is bigger than the allotted size of: $IMAGEMEGS"
+	exit 1
+fi
+
+PADSIZE=$( echo "( $IMAGEMEGS * 1048576 ) - $UIMAGESIZE" | bc )
+
+echo "Pad size: $PADSIZE"
+
+rm -f uImage.pad
+
+dd if=/dev/zero of=uImage.pad bs=$PADSIZE count=1
+
+rm -f uImage.img
+
+cat $UIMAGESPEC uImage.pad >> uImage.img
+
+echo "Creation of uImage.img complete..."
+
+rm -f rootfs.img
+
+mksquashfs $ROOTFOLDER rootfs.img -b 4096
+
+rm -f flashware.img
+
+cat uImage.img rootfs.img >> flashware.img
+
+
+
+

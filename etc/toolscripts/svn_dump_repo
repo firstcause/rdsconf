@@ -1,0 +1,96 @@
+#!/bin/sh
+
+# $1	prefix name
+# $2	backup path
+# $3 	is the SVN repository path
+
+NOWDATETIME=$( date +%Y%m%d-%H%M )
+DUMPPREFIX=$1
+BASEPATHSPEC=$2
+SVNREPOPATH=$3
+
+newbasespec=$BASEPATHSPEC/$DUMPPREFIX-$NOWDATETIME
+newdumpspec=$newbasespec.svn.dump.gz
+newinfospec=$newbasespec.svn.info
+curinfospec=$BASEPATHSPEC/$DUMPPREFIX-0000.svn.info
+
+LOGMSG="logger -t svndump"
+
+$LOGMSG "svn_dump_repo: start:" $NOWDATETIME
+
+svnlook info $SVNREPOPATH > $newinfospec
+
+if ! test -f $curinfospec
+then
+	
+	$LOGMSG "OK: No current file set, automatic"
+	
+else
+
+	if diff -q $curinfospec $newinfospec
+	then
+
+    	$LOGMSG "No change, skipping:" $SVNREPOPATH
+	    rm -vf $newinfospec
+    
+    exit 0
+    
+	fi
+fi
+
+# svnadmin dump /home/svn/rdsqos/ | gzip -9 -c > test.gz
+
+$LOGMSG "SVN dump: " $SVNREPOPATH "to" $newdumpspec
+
+if ! svnadmin dump $SVNREPOPATH -q | gzip -c -9 > $newdumpspec
+then
+	$LOGMSG "FATAL: Dump failed: " $SVNREPOPATH
+	
+	rm -vf $newdumpspec
+	
+	exit 1
+fi
+
+$LOGMSG "SVN dump successful, rotating file set list..."
+        
+{
+	for (( i=9; i >= 0 ; i-- ))
+	do
+   		printf "%s/%s-%04u\n" $BASEPATHSPEC $DUMPPREFIX $i
+	done
+
+} > $BASEPATHSPEC/$NOWDATETIME-setlist.txt
+    
+{
+	for(( i=0; i < 10; ++i ))
+	do
+		if read fspec1
+		then
+		
+			if [ $i == 0 ]
+			then
+				$LOGMSG "Deleting file set: " $fspec1
+				rm -vf $fspec1*
+			else
+				if test -f $fspec1.svn.dump.gz
+				then
+					$LOGMSG "       Rotate set: "$fspec1" to "$fspec2
+					mv $fspec1.svn.dump.gz $fspec2.svn.dump.gz
+					mv $fspec1.svn.info $fspec2.svn.info
+				else
+					$LOGMSG " No set to rotate: "$fspec1
+				fi
+			fi
+
+			fspec2=$fspec1
+			
+		fi
+	done
+
+} < $BASEPATHSPEC/$NOWDATETIME-setlist.txt
+
+mv -v $newdumpspec $BASEPATHSPEC/$DUMPPREFIX-0000.svn.dump.gz
+mv -v $newinfospec $BASEPATHSPEC/$DUMPPREFIX-0000.svn.info
+rm -vf $BASEPATHSPEC/$NOWDATETIME-setlist.txt
+
+$LOGMSG "svn_dump_repo script exiting."

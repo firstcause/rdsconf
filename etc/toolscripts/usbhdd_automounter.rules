@@ -1,0 +1,5 @@
+ACTION=="add", SUBSYSTEMS=="block", RUN+="/etc/toolscripts/usbhdd_automounter add $env{ID_FS_UUID} $env{ID_FS_LABEL}"
+ACTION=="change", SUBSYSTEMS=="block", RUN+="/etc/toolscripts/usbhdd_automounter change $env{ID_FS_UUID} $env{ID_FS_LABEL}"
+ACTION=="remove", SUBSYSTEMS=="block", RUN+="/etc/toolscripts/usbhdd_automounter remove $env{ID_FS_UUID} $env{ID_FS_LABEL}"
+
+

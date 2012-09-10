@@ -1,0 +1,83 @@
+#!/bin/bash
+
+do_mult()
+{
+	echo "incoming" $1 $2
+	
+	echo "The result is" $(( $1 * $2 ))
+}
+
+do_calc_test()
+{
+	echo "Calc test1" $1
+	echo "Calc test2" $( $1 )
+}
+
+print_tweak_item()
+{
+	local TWEAK_TARGET
+	
+	TWEAK_TARGET=$1
+	
+	local STATUSER=$( stat -c %U $TWEAK_TARGET )
+		
+	echo The user is: $STATUSER
+	
+	local TWEAK_TMP=$TWEAK_TARGET".flashtweak"
+	
+	echo Print a tweak tmp: $TWEAK_TMP
+}
+
+read_tweak_list() {
+
+	local TWEAKFOLDER
+	
+	local VAREXPR
+	
+	local VAREXPR2
+	
+	local VARBYTES
+	
+	local TWEAKSIZE
+	
+	while read TWEAKFOLDER VAREXPR; do
+	
+		VARBYTES=( $( du -bs /var/log )); VARBYTES=${VARBYTES[0]}
+		
+		echo "Bytes equals: $VARBYTES"
+		
+		if [ -z "$VAREXPR" ]; then
+			echo "Blank expression using default size."
+			
+			TWEAKSIZE=${DEFAULT_TWEAKSIZE:-32K}
+		else
+		
+			if [ "$VAREXPR" != "${VAREXPR/\%1/}" ]; then
+
+				echo "Paren-type is: $VAREXPR"
+		
+				VAREXPR2=${VAREXPR/\%1/$VARBYTES}
+		
+				TWEAKSIZE=$(( $VAREXPR2 ))
+				
+			else
+				echo "Fixed type expression: $VAREXPR"
+				
+				TWEAKSIZE=$VAREXPR
+			fi
+		fi
+		
+		echo "Tweak size is: $TWEAKSIZE"
+			
+	done
+}
+
+read_tweak_list < ./folders.txt
+
+# VARRESULT=( $( du -bs /var/log ))
+
+# echo "Array sub zero is: "${VARRESULT[0]}
+
+# ARGIWANT=$(return_arg1 $VARRESULT)
+
+# echo "Arg you want: " $ARGIWANT

@@ -1,0 +1,223 @@
+#!/bin/bash
+
+NAME=usbhdd_automounter
+LOGMSG="logger -t $NAME"
+
+[ -r /etc/default/$NAME.default ] && . /etc/default/$NAME.default
+
+uuid_ismounted()
+{
+	$LOGMSG "UUID: Check if mounted: $1"
+	
+	local UUIDDEV=$( blkid -U $1 )
+	
+	$LOGMSG "UUID: $1 is mapped to: $UUIDDEV"
+	
+	if grep -q $UUIDDEV /proc/mounts
+	then
+
+		$LOGMSG "UUID: $1 is currently mounted."
+	
+		return 0
+		
+	fi
+	
+	return 1
+}
+
+uuid_mount()
+{
+	echo "Mounting UUID $1 Label: $2 Type: $3 options: $4"
+	
+	echo "The Mount folder is: $MOUNTFOLDER"
+	
+	local MOUNTSPEC=$MOUNTFOLDER/$2
+	
+	$LOGMSG "The Mount spec is: $MOUNTSPEC"
+	
+	if uuid_ismounted $1
+	then
+	
+		$LOGMSG "MOUNT: exiting, taking no action, the device is already mounted."
+		
+	else
+	
+		if grep -q $MOUNTSPEC /proc/mounts
+		then
+			$LOGMSG "Warning: exiting, the mountspec is in use"
+		else
+		
+			if ! mkdir -p $MOUNTSPEC 
+			then
+				$LOGMSG "MOUNT: failed, couldn't create mount spec: $MOUNTSPEC"
+				
+				return 0
+			fi
+			
+			$LOGMSG "MOUNT: attempting with command: mount -t $3 -U $1 $MOUNTSPEC"
+			
+			if mount -t $3 -U $1 $MOUNTSPEC
+			then
+				$LOGMSG "MOUNT: succeeded"
+			fi
+		fi
+	fi
+	return 0
+	
+}
+
+uuid_unmount()
+{
+	echo "Un-Mounting Label: $1 UUID $2 Type: $3 options: $4"
+
+	local DEVLABEL=$1
+	
+	local UUIDDEV=$( blkid -U $2 )
+	
+	$LOGMSG "UUID: unmount, $1 is mapped to device: $UUIDDEV"
+	
+	return 0
+}
+
+process_action_add()
+{
+	local DISKUUID
+	
+	local VOLTYPE
+	
+	local MOUNTOPTS
+
+	local MOUNTPOINT
+
+	$LOGMSG "process_action_add start..."
+
+	{
+		while read DISKUUID VOLTYPE MOUNTOPTS; do
+		
+			if [ "$1" = "$DISKUUID" ]
+			then
+				$LOGMSG "ADD: list matched: $DISKUUID"
+
+				if ! uuid_mount $1 $2 $VOLTYPE $MOUNTOPTS
+				then 
+					return 1
+				fi
+			fi
+		done
+		
+	} < $LISTFILE
+	
+	return 0
+}
+
+process_action_change()
+{
+	local DISKUUID
+	
+	local VOLTYPE
+	
+	local MOUNTOPTS
+
+	local MOUNTPOINT
+
+	$LOGMSG "process_action_change start..."
+
+	{
+		while read DISKUUID VOLTYPE MOUNTOPTS; do
+		
+			$LOGMSG "CHANGE: list test: $DISKUUID"
+			
+			if [ "$1" = "$DISKUUID" ]
+			then
+				$LOGMSG "CHANGE: list matched: $DISKUUID"
+
+				if ! uuid_mount $1 $2 $VOLTYPE $MOUNTOPTS
+				then 
+					return 1
+				fi
+			fi
+		done
+		
+	} < $LISTFILE
+	
+	return 0
+}
+
+process_action_remove()
+{
+	local DISKUUID
+	
+	local VOLTYPE
+	
+	local MOUNTOPTS
+
+	local MOUNTPOINT
+
+	$LOGMSG "process_action_remove start..."
+
+	{
+		while read DISKUUID VOLTYPE MOUNTOPTS; do
+		
+			if [ "$1" = "$DISKUUID" ]
+			then
+				$LOGMSG "REMOVE: list matched: $DISKUUID"
+
+				if ! uuid_unmount $1 $2 $VOLTYPE $MOUNTOPTS
+				then 
+					return 1
+				fi
+			fi
+		done
+		
+	} < $LISTFILE
+	
+	return 0
+}
+
+VERBOSE=yes
+
+if [ -z $2 ]
+then
+	$LOGMSG "Warning: exiting, device has no UUID"
+	exit 0
+fi
+
+if [ -z $3 ]
+then
+	$LOGMSG "Warning: exiting, device has no LABEL"
+	exit 0
+fi
+
+if [ ! -f $LISTFILE ]
+then
+	$LOGMSG "Warning, exiting, no list file to process."
+	exit 0
+fi
+
+$LOGMSG "        Verbose: $VERBOSE"
+$LOGMSG "   Mount folder: $MOUNTFOLDER"
+$LOGMSG "      List file: $LISTFILE"
+$LOGMSG " UUID parameter: $2"
+$LOGMSG "Label parameter: $3"
+
+case $1 in
+	add)
+		$LOGMSG "Handle Action: add: UUID $2 Label $3"
+	
+		process_action_add $2 $3
+	;;
+	change)
+		$LOGMSG "Handle Action: change: UUID $2 Label $3"
+	
+		process_action_change $2 $3
+	;;
+	remove)
+		$LOGMSG "Handle Action: remove: UUID $2 Label $3"
+	
+		proces_action_remove $2 $3
+	;;
+	*)
+		echo usage: some useful info here
+	;;
+	
+esac

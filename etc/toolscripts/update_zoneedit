@@ -1,0 +1,36 @@
+#!/bin/bash
+
+LOGMSG="logger -t update_zoneedit"
+NOWDATETIME=$( date +%Y%m%d-%H%M )
+
+$LOGMSG "Invoked at $NOWDATETIME"
+
+# Execute the operation
+case "$reason" in
+    MEDIUM|ARPCHECK|ARPSEND)
+        # Do nothing
+        ;;
+    BOUND|RENEW|REBIND|REBOOT)
+    
+    	$LOGMSG "IP old: $old_ip_address new: $new_ip_address"
+
+        if [ -z "$old_ip_address" -o "$old_ip_address" != "$new_ip_address" -o \
+            "$reason" = "BOUND" -o "$reason" = "REBOOT" ]; then
+            
+            if wget -O - --http-user=remarus --http-passwd=ratsass01 'http://dynamic.zoneedit.com/auth/dynamic.html?host=quantumos.com'
+            then
+            	$LOGMSG "wget operation OK...."
+            fi
+            
+        fi
+
+        ;;
+
+    EXPIRE|FAIL|RELEASE|STOP)
+    
+        ;;
+
+    TIMEOUT)
+
+        ;;
+esac

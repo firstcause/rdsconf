@@ -1,0 +1,13 @@
+#!/bin/sh
+
+
+NOWDATETIME=$( date +%Y%m%d-%H%M )
+LOGSPEC=$NOWDATETIME".log"
+
+echo "Starting make log: "$LOGSPEC
+
+make -w $1 $2 $3 | tee $LOGSPEC
+
+cp $LOGSPEC lastmake.log
+
+

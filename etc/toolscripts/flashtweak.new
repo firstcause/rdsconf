@@ -1,0 +1,325 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          flashtweak
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Example initscript
+# Description:       This file should be used to construct scripts to be
+#                    placed in /etc/init.d.
+### END INIT INFO
+
+# INSTALL WITH: sudo update-rc.d -n flashtweak defaults 15 95
+
+# Author: Foo Bar <foobar@baz.org>
+#
+# Please remove the "Author" lines above and replace them
+# with your own name if you copy and modify this script.
+
+# Do NOT "set -e"
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Sets up tmps shadow folders for flash based systems"
+NAME=flashtweak
+DAEMON=/etc/toolscripts/$NAME
+DAEMON_ARGS="--options args"
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+FLASHTWEAK_LOCK=/var/run/$NAME.lock
+FLASHTWEAK_DEBUG=
+
+# Exit if the package is not installed
+[ -x "$DAEMON" ] || exit 0
+
+FLASHTWEAK_LIST_FILE=/etc/flashtweak.list
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+VERBOSE="yes"
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+install_tweak_folder()
+{
+	local TWEAK_TARGET=$1
+
+	local TWEAK_EXPR=$2
+
+	local TWEAK_SIZE
+
+	local TWEAK_TMP="$TWEAK_TARGET.flashtweak"
+	
+	echo "Entering \"install_tweak_folder\" TWEAK_TARGET: $TWEAK_TARGET TWEAK_EXPR: $TWEAK_EXPR\r\n"
+
+	if [ -z $TWEAK_TARGET ] || [ ! -d $TWEAK_TARGET ]
+	then
+		echo "TWEAK_TARGET is null or not a folder: $TWEAK_TARGET"
+		return 1
+	fi
+
+	local STATUSER=$( stat -c %U $TWEAK_TARGET )
+
+	local STATGROUP=$( stat -c %G $TWEAK_TARGET )
+	
+	echo "About to get VARBYTES"
+
+	local VARBYTES=$( du -bs $TWEAK_TARGET )
+
+	echo "Folder size equals: $VARBYTES"
+
+	if [ -z "$TWEAK_EXPR" ]
+	then
+		echo "Blank expression using default size."
+
+		TWEAK_SIZE=${DEFAULT_TWEAK_SIZE:-32K}
+	else
+		echo "TWEAK_EXPR is not null"
+		
+		if [ "$TWEAK_EXPR" != "${TWEAK_EXPR/\%1/}" ]
+		then
+
+			echo "Paren-type is: $TWEAK_EXPR"
+
+			TWEAK_EXPR=${TWEAK_EXPR/\%1/$VARBYTES}
+
+			TWEAK_SIZE=$TWEAK_EXPR
+
+		else
+			echo "Fixed type expression: $TWEAK_EXPR"
+
+			TWEAK_SIZE=$TWEAK_EXPR
+		fi
+	fi
+
+	echo "Tweak size is: $TWEAK_SIZE"
+	
+	if [ -z $FLASHTWEAK_DEBUG ]; 
+	then
+
+		if [ -e "$TWEAK_TMP" ]
+		then
+			rm -frd $TWEAK_TMP
+		fi
+
+		mkdir $TWEAK_TMP
+
+		if ! rsync -rpogt $TWEAK_TARGET/* $TWEAK_TMP
+		then
+			echo "RSYNC failed: $TWEAK_TARGET to $TWEAK_TMP\r\n"
+		else
+			echo "Folder sync $TWEAK_TARGET -> $TWEAK_TMP successful."
+			
+			if mount -t tmpfs -o size=$TWEAK_SIZE,mode=755 tmpfs $TWEAK_TARGET
+			then
+				echo "Mount of TMPFS at: $TWEAK_TARGET successful."
+				
+				if chown $STATUSER:$STATGROUP $TWEAK_TARGET
+				then
+					echo "Ownership updated for: $TWEAK_TARGET successful."
+					
+					if rsync -rpogt $TWEAK_TMP/* $TWEAK_TARGET
+					then
+						echo "Folder sync $TWEAK_TMP -> $TWEAK_TARGET successful."
+						
+						return 0
+					fi
+				fi
+			fi
+		fi
+	else
+		echo "Running in debug mode!!"
+		echo "   TWEAK_TMP=$TWEAK_TMP"
+		echo "TWEAK_TARGET=$TWEAK_TARGET"
+		echo "  TWEAK_SIZE=$TWEAK_SIZE"
+		
+		return 0
+	fi
+	return 1
+}
+
+remove_tweak_folder()
+{
+	local TWEAK_TARGET=$1
+
+	local TWEAK_TMP=$TWEAK_TARGET".flashtweak"
+
+	if [ ! -d $TWEAK_TMP ]; then
+		return 1
+	fi
+
+	rsync -rpogt $TWEAK_TARGET/* $TWEAK_TMP
+	umount $TWEAK_TARGET
+	rsync -rpogt $TWEAK_TMP/* $TWEAK_TARGET
+	rm -frd $TWEAK_TMP
+
+	return 0
+}
+
+process_tweak_file_start()
+{
+    local TWEAKFOLDER
+
+    local TWEAKEXPR
+
+    while read TWEAKFOLDER TWEAKEXPR; do
+    
+    	if [ ! -z $TWEAKFOLDER ]
+    	then
+    	
+        	log_daemon_msg "Setting up, folder: $TWEAKFOLDER Expression: $TWEAKEXPR" "$NAME"
+
+	        install_tweak_folder $TWEAKFOLDER $TWEAKEXPR
+	fi	      
+
+    done
+}
+
+process_tweak_file_stop()
+{
+    local TWEAKFOLDER
+
+    local TWEAKEXPR
+
+    while read TWEAKFOLDER TWEAKEXPR; do
+
+        log_daemon_msg "Removing tweak for: $TWEAKFOLDER" "$NAME"
+
+        remove_tweak_folder $TWEAKFOLDER
+
+    done
+}
+
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+	if [ -e $FLASHTWEAK_LOCK ];
+	then
+
+		echo "$NAME: Start requested but already running..."
+
+		return 0
+	fi
+
+	echo "Folder list: $FLASHTWEAK_LIST_FILE"
+
+	if [ ! -f $FLASHTWEAK_LIST_FILE ]
+	then
+		log_daemon_msg "No tweak file to process..." "$NAME"
+		return 1
+	fi
+
+	process_tweak_file_start < $FLASHTWEAK_LIST_FILE
+
+	if [ -z $FLASHTWEAK_DEBUG ]
+	then
+		touch $FLASHTWEAK_LOCK
+	fi
+
+	return 0
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+	if [ ! -e $FLASHTWEAK_LOCK ] && [ -z $FLASHTWEAK_DEBUG ];
+	then
+
+		echo "$NAME: Stop requested but not running..."
+
+		return 0
+	fi
+
+	if [ ! -f $FLASHTWEAK_LIST_FILE ];
+	then
+
+		log_daemon_msg "STOP: $NAME: No tweak file to process..." "$NAME"
+
+		return 1
+	fi
+
+	process_tweak_file_stop < $FLASHTWEAK_LIST_FILE
+
+	rm -f $FLASHTWEAK_LOCK
+
+	return 0
+}
+
+#
+# Function that sends a SIGHUP to the daemon/service
+#
+do_reload() {
+	return 0
+}
+
+echo "Verbose: $VERBOSE"
+
+VERBOSE=yes
+
+case "$1" in
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  stop)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  #reload|force-reload)
+	#
+	# If do_reload() is not implemented then leave this commented out
+	# and leave 'force-reload' as an alias for 'restart'.
+	#
+	#log_daemon_msg "Reloading $DESC" "$NAME"
+	#do_reload
+	#log_end_msg $?
+	#;;
+  restart|force-reload)
+	#
+	# If the "reload" option is implemented then remove the
+	# 'force-reload' alias
+	#
+	log_daemon_msg "Restarting $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	  0|1)
+		do_start
+		case "$?" in
+			0) log_end_msg 0 ;;
+			1) log_end_msg 1 ;; # Old process is still running
+			*) log_end_msg 1 ;; # Failed to start
+		esac
+		;;
+	  *)
+	  	# Failed to stop
+		log_end_msg 1
+		;;
+	esac
+	;;
+  *)
+	#echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+	exit 3
+	;;
+esac
+
+:

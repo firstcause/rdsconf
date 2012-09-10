@@ -1,0 +1,2 @@
+MOUNTFOLDER=/var/volume
+LISTFILE=/etc/$NAME.list

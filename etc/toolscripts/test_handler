@@ -1,0 +1,16 @@
+#!/bin/sh
+
+LOGMSG="logger -t test_handler"
+
+FILESPEC=$1
+NAMEPART=${FILESPEC%.*}
+NEWSPEC=$NAMEPART.mp4
+
+$LOGMSG '  Source File: ' $FILESPEC
+$LOGMSG '    Name part: ' $NAMEPART
+$LOGMSG '  Target Spec: ' $2/$NEWSPEC
+
+exit 1
+
+
+	

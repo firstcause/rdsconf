@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# the cipher is the first command line argument
+CIPHER=$1
+# the loop device to use is the second
+LOOPDEV=$2
+# the underlying file is third
+UNDERLYING=$3
+
+# until the two passphrases match and are not empty...
+until [ "$PASS1" = "$PASS2" -a -n "$PASS1" ]; do
+        # the bash read buitlin has to support the -s option.
+        # Don't use read without -s!!
+        read -s -p "Enter Passphrase: " PASS1; echo
+        read -s -p "Re-enter Passphrase: " PASS2; echo
+done
+
+# setup the loop device using the passphrase given on STDIN.
+echo "$PASS1" | losetup -e $CIPHER -p 0 $LOOPDEV $UNDERLYING

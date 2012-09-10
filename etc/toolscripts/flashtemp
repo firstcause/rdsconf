@@ -1,0 +1,183 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          Volatile storage for files in tmpfs
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Example initscript
+# Description:       This file should be used to construct scripts to be
+#                    placed in /etc/init.d.
+### END INIT INFO
+
+# INSTALL WITH: sudo update-rc.d -n flashtemp defaults 15 95
+
+# Author: Foo Bar <foobar@baz.org>
+#
+# Please remove the "Author" lines above and replace them
+# with your own name if you copy and modify this script.
+
+# Do NOT "set -e"
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Sets up tmps shadow folders for flash based systems"
+NAME=flashtemp
+DAEMON=/etc/toolscripts/$NAME
+DAEMON_ARGS="--options args"
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+FLASHTEMP_LOCK=/var/run/$NAME.lock
+FLASHTWEAK_DEBUG=1
+
+# Exit if the package is not installed
+[ -x "$DAEMON" ] || exit 0
+
+FLASHTEMP_TARGET=/var/cache/flashtemp
+FLASHTEMP_SIZE=32M
+FLASHTEMP_SOURCE=/etc/toolscripts/flashtemp_templates/$(hostname)
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME.default ] && . /etc/default/$NAME.default
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+	if [ -e $FLASHTEMP_LOCK ];
+	then
+		log_daemon_msg "$NAME: Start requested but already running..."
+		return 0
+	fi
+
+	log_daemon_msg "Starting: Target folder: $FLASHTEMP_TARGET"
+	log_daemon_msg "Starting: Source folder: $FLASHTEMP_SOURCE"
+	log_daemon_msg "Starting:          size: $FLASHTEMP_SIZE"
+
+	if mkdir -p $FLASHTEMP_TARGET
+	then
+		if mount -t tmpfs -o size=$FLASHTEMP_SIZE,mode=755 tmpfs $FLASHTEMP_TARGET
+		then
+			log_daemon_msg "Target folder mounted at: $FLASHTEMP_TARGET"
+		
+			if rsync -ap $FLASHTEMP_SOURCE/* $FLASHTEMP_TARGET 
+			then
+				log_daemon_msg "File sync SUCCESS: $FLASHTEMP_TARGET"
+				
+				if [ -z $FLASHTEMP_DEBUG ]
+				then
+					touch $FLASHTEMP_LOCK
+				fi
+				
+				return 0
+			else
+				log_daemon_msg "File sync FAILED: $FLASHTEMP_TARGET"
+				return 1
+			fi
+		else
+			log_daemon_msg "Couldn't mount at: $FLASHTEMP_TARGET"
+			return 1
+		fi
+	else
+		log_daemon_msg "mkdir failed for target: $FLASHTEMP_TARGET"
+		return 1
+	fi
+             	
+	return 0
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+	if [ ! -e $FLASHTEMP_LOCK ] && [ -z $FLASHTEMP_DEBUG ];
+	then
+		log_daemon_msg "$NAME: Stop requested but not running..."
+		return 0
+	fi
+	
+	rsync -ap $FLASHTEMP_TARGET/* $FLASHTEMP_SOURCE
+	
+	umount $FLASHTEMP_TARGET
+
+	rm -f $FLASHTEMP_LOCK
+
+	return 0
+}
+
+#
+# Function that sends a SIGHUP to the daemon/service
+#
+do_reload() {
+	return 0
+}
+
+echo "Verbose: $VERBOSE"
+
+VERBOSE=yes
+
+case "$1" in
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  stop)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  #reload|force-reload)
+	#
+	# If do_reload() is not implemented then leave this commented out
+	# and leave 'force-reload' as an alias for 'restart'.
+	#
+	#log_daemon_msg "Reloading $DESC" "$NAME"
+	#do_reload
+	#log_end_msg $?
+	#;;
+  restart|force-reload)
+	#
+	# If the "reload" option is implemented then remove the
+	# 'force-reload' alias
+	#
+	log_daemon_msg "Restarting $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	  0|1)
+		do_start
+		case "$?" in
+			0) log_end_msg 0 ;;
+			1) log_end_msg 1 ;; # Old process is still running
+			*) log_end_msg 1 ;; # Failed to start
+		esac
+		;;
+	  *)
+	  	# Failed to stop
+		log_end_msg 1
+		;;
+	esac
+	;;
+  *)
+	#echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+	exit 3
+	;;
+esac
+
+:

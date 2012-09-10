@@ -1,0 +1,56 @@
+#!/bin/sh
+
+LOCAL_NAME=$1
+KERNEL_FOLDER=$2
+
+if [ "$KERNEL_FOLDER" == "" ]
+then
+	echo "FAIL! Missing the kernel folder argument"
+	echo "usage: dokernelmake <local name> <kernel folder>"
+	exit 1
+fi 
+
+if [ ! -d $KERNEL_FOLDER ] 
+then
+	echo "FAIL! The folder specified, does not exist: $KERNEL_FOLDER"
+	exit 1
+fi
+
+if [ ! -e $KERNEL_FOLDER/.config ]
+then
+	echo "FAIL! The folder specified, does not have a config file"
+	exit 1
+fi
+        
+if [ ! -e $KERNEL_FOLDER/version_sequence.txt ]
+then
+	echo "1" > $KERNEL_FOLDER/version_sequence.txt
+fi
+
+let SEQNUMBER=$( cat $KERNEL_FOLDER/version_sequence.txt )
+
+LOCAL_VERSION=$LOCAL_NAME-$( printf "%03d" $SEQNUMBER )
+
+rm -frd 
+
+echo $SEQNUMBER+1 > $KERNEL_FOLDER/version_sequence.txt
+
+echo "Building version: $LOCAL_VERSION"
+
+rm -frd $KERNEL_FOLDER/.oldconfig
+
+mv $KERNEL_FOLDER/.config $KERNEL_FOLDER/.oldconfig
+
+SEDCMD="s/^CONFIG_LOCALVERSION.*/CONFIG_LOCALVERSION=\"-$LOCAL_VERSION\"/"
+
+sed $SEDCMD $KERNEL_FOLDER/.oldconfig > $KERNEL_FOLDER/.config
+
+cp $KERNEL_FOLDER/.config ./kernel-config-$LOCAL_VERSION
+
+echo "Starting build in NOHUP and FAKEROOT..."
+
+sleep 3
+
+nohup fakeroot make -C $KERNEL_FOLDER all $3 $4 $5 $6 &
+
+tail -f nohup.out

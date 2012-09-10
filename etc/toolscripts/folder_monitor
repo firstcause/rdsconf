@@ -1,0 +1,155 @@
+#!/bin/bash
+
+NOWDATETIME=$( date +%Y%m%d-%H%M )
+
+USERSPEC=$1
+BASEFOLDER=$2
+HANDLERSCRIPT=$3
+
+UUIDSPEC=$( uuidgen )
+LOGMSG="logger -t folder_monitor:$UUIDSPEC:"
+SUDOCMD="sudo -u $USERSPEC -s "
+
+INPROCESSFLAG=$BASEFOLDER/inprocess_folder_monitor-$USERSPEC.flg
+
+INCOMINGFOLDER=$BASEFOLDER/incoming
+ORIGINALSFOLDER=$BASEFOLDER/originals
+TARGETFOLDER=$BASEFOLDER/target
+TEMPFOLDER=$BASEFOLDER/$NOWDATETIME
+
+if [ -z $BASEFOLDER ]; then
+
+	echo 'Missing parameters....'
+	echo 'Usage: folder_monitor `userspec` `basefolder` `handler script`'
+	$LOGMSG "FAIL! Missing parameters..."
+	exit 1
+fi
+
+if [ -z $HANDLERSCRIPT ]; then
+
+	echo 'Missing handler script parameter....'
+	echo 'Usage: folder_monitor `userspec` `basefolder` `handler script`'
+	$LOGMSG "FAIL! Missing parameters..."
+	
+	exit 1
+fi
+
+if ! test -d $INCOMINGFOLDER
+then
+	$LOGMSG 'Incoming folder does not exist: ' $INCOMINGFOLDER
+	exit 0
+fi
+
+if test -f $INPROCESSFLAG
+then
+	$LOGMSG "IPROCESS EXIT! Going to wait..."
+	exit 0
+fi
+
+$SUDOCMD touch $INPROCESSFLAG
+
+FLAGSTAMP=$( stat -c "%X" $INPROCESSFLAG )
+
+$LOGMSG "starting at:" $NOWDATETIME
+
+if ! test -d $TEMPFOLDER
+then
+	$LOGMSG '   Temp folder does not exist: ' $TEMPFOLDER
+	$LOGMSG '                       Create: ' $TEMPFOLDER
+
+	if ! $SUDOCMD mkdir $TEMPFOLDER
+	then
+		$LOGMSG "Couldn't create: " $TEMPFOLDER
+		exit 0
+	fi
+fi
+	
+if ! test -d $TARGETFOLDER
+then
+	$LOGMSG ' Target folder does not exist: ' $TARGETFOLDER
+	$LOGMSG '                       Create: ' $TARGETFOLDER
+		
+	if ! $SUDOCMD mkdir $TARGETFOLDER
+	then
+		$LOGMSG "Couldn't create: " $TARGETFOLDER
+		exit 1
+	fi
+fi
+	
+cd $INCOMINGFOLDER
+
+$LOGMSG "   Base Folder: " $BASEFOLDER
+$LOGMSG "Handler script: " $HANDLERSCRIPT
+
+process_loop() {
+
+	for a in *; do
+
+		$LOGMSG "File found: $a"
+	
+		MODELAPSED=$(( $FLAGSTAMP - $( stat -c "%X" $a )))
+	
+		echo "  Inprocess stamp: " $FLAGSTAMP
+		echo "        mod stamp: " $( stat -c "%X" $a )
+		echo "Seconds since mod: " $MODELAPSED
+		
+		if [ -f $ORIGINALSFOLDER/$a ]
+		then
+			if cmp -s $a $ORIGINALSFOLDER/$a
+			then
+				$LOGMSG "Deleting file already converted: $a"
+				rm -f $a
+			else
+				$LOGMSG "Skipping file due to name collision: $a"
+			fi
+		else
+		
+			if [ ! $MODELAPSED -ge 300 ]
+			then
+				$LOGMSG "WARNING!! Skipping, copy is too fresh: $a"
+				continue
+			fi
+				
+			if ! $SUDOCMD $HANDLERSCRIPT $UUIDSPEC $a $TEMPFOLDER
+			then
+				$LOGMSG "FAILED! handler script error: $a"
+				continue
+			fi
+			
+			$LOGMSG "SUCCESS! Handler script processed: $a"
+			
+			if ! $SUDOCMD mv -f $TEMPFOLDER/* $TARGETFOLDER 
+			then
+				$LOGMSG "FAILED! couldn't move results to target: $a"
+				
+				continue
+			fi
+			
+			$LOGMSG "SUCCESS! results moved to target: $a"
+
+			if ! $SUDOCMD mv -f $a $ORIGINALSFOLDER/
+			then
+				$LOGMSG "WARNING! Couldn't move incoming to originals: $a"
+			fi
+			
+			$LOGMSG "SUCCESS! incoming file saved in originals folder: $a"
+			
+		fi
+		
+	done
+	
+	return 0
+}
+
+if process_loop
+then
+	$SUDOCMD rm -frd $TEMPFOLDER
+	
+	$LOGMSG 'Process loop completed successfully: ' $( date +%Y%m%d-%H%M )
+else
+	$LOGMSG 'Processing failed:' $( date +%Y%m%d-%H%M )
+fi
+
+$SUDOCMD rm -f $INPROCESSFLAG
+
+exit 0

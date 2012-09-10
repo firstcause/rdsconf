@@ -1,0 +1,76 @@
+#!/bin/sh
+
+LOCAL_NAME=$1
+KERNEL_FOLDER=$2
+SEQUENCE_FILE=$PWD/${LOCAL_NAME}_sequence.txt
+
+echo "Sequence file is: $SEQUENCE_FILE"
+
+if [ "$KERNEL_FOLDER" == "" ]
+then
+	echo "FAIL! Missing the kernel folder argument"
+	echo "usage: dokernelmake <local name> <kernel folder>"
+	exit 1
+fi 
+
+if [ ! -d $KERNEL_FOLDER ] 
+then
+	echo "FAIL! The folder specified, does not exist: $KERNEL_FOLDER"
+	exit 1
+fi
+
+if [ ! -e $KERNEL_FOLDER/.config ]
+then
+	echo "FAIL! The folder specified, does not have a config file"
+	exit 1
+fi
+        
+if [ ! -e $SEQUENCE_FILE ]
+then
+	echo "1" > $SEQUENCE_FILE
+fi
+
+let SEQNUMBER=$( cat $SEQUENCE_FILE )
+
+LOCAL_VERSION=$LOCAL_NAME-$( printf "%03d" $SEQNUMBER )
+
+rm -frd 
+
+echo $SEQNUMBER+1 > $SEQUENCE_FILE
+
+echo "Building version: $LOCAL_VERSION"
+
+rm -frd $KERNEL_FOLDER/.oldconfig
+
+mv $KERNEL_FOLDER/.config $KERNEL_FOLDER/.oldconfig
+
+SEDCMD="s/^CONFIG_LOCALVERSION.*/CONFIG_LOCALVERSION=\"-$LOCAL_VERSION\"/"
+
+sed $SEDCMD $KERNEL_FOLDER/.oldconfig > $KERNEL_FOLDER/.config
+
+cp $KERNEL_FOLDER/.config ./kernel-config-debian-$LOCAL_VERSION
+
+echo "Zapping the old debian folder..."
+
+rm -frd $KERNEL_FOLDER/debian
+
+echo "Starting build in NOHUP and FAKEROOT..."
+
+sleep 3
+
+cd $KERNEL_FOLDER
+
+nohup fakeroot make-kpkg --initrd kernel_image &
+
+tail -f nohup.out
+
+cd ..
+
+
+
+
+
+
+
+
+

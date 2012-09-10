@@ -1,0 +1,22 @@
+#!/bin/bash
+
+NAME=case_test
+LOGMSG="logger -t $NAME"
+
+echo "     Verbose: $VERBOSE"
+echo "Mount folder: $MOUNTFOLDER"
+
+case $1 in
+	add)
+		echo got action add
+	;;
+	
+	remove)
+		echo got action remove
+	;;
+	
+	*)
+		echo usage: some useful info here
+	;;
+	
+esac

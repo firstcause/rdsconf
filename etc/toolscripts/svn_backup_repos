@@ -1,0 +1,51 @@
+#!/bin/sh
+# cron script for svn_backup_repos
+
+NOWDATETIME=$( date +%Y%m%d-%H%M )
+HOSTNAME=$( hostname )
+
+BACKUPMOUNT=/mnt/simple320
+SVNROOTSPEC=/home/webadmin/svn
+
+SVNDUMPSPEC=$BACKUPMOUNT/svndump/$HOSTNAME
+
+LOGMSG="logger -t svnbackup"
+
+$LOGMSG "svn backup script starting..."
+
+if ! /etc/toolscripts/mount_label ext3 USB320 $BACKUPMOUNT
+then
+	$LOGMSG "FATAL: the backup media is not available, exiting"
+    
+	exit 1
+fi
+        
+if ! test -d $SVNDUMPSPEC
+then
+	$LOGMSG "Folder not accessible: " $SVNDUMPSPEC
+	$LOGMSG "    Attempting create: " $SVNDUMPSPEC
+	
+	if ! mkdir -p $SVNDUMPSPEC
+	then
+		$LOGMSG "FATAL: Create failed..."
+		
+		exit 1
+	fi
+fi
+
+$LOGMSG "SVN dump folder is present: " $SVNDUMPSPEC
+
+cd $SVNROOTSPEC
+
+SVNLIST="*"
+
+$LOGMSG "Starting SVN dump loop..."
+
+for f in $SVNLIST
+do
+        $LOGMSG "Processing: $f"
+        /etc/toolscripts/svn_dump_repo $HOSTNAME-$f $SVNDUMPSPEC $f
+done
+
+$LOGMSG "SVN dump processing complete, exiting."
+        

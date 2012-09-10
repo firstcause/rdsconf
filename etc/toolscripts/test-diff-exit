@@ -1,0 +1,26 @@
+#!/bin/sh
+
+echo "1" > test1.txt
+echo "2" > test2.txt
+
+echo "1" > test1-1.txt
+
+echo "Starting diff test 1"
+
+if diff -q test1.txt test2.txt
+then
+	echo "diff returned 1 as expected"
+else
+	echo "diff returned 0"
+fi
+
+echo "Starting diff test 2"
+
+if diff -q test1.txt test1-1.txt
+then
+	echo "diff returned 1 when files matched"
+else
+	echo "diff returned 0 when files matched"
+fi
+
+	

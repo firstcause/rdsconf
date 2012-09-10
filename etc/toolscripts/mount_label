@@ -1,0 +1,38 @@
+#!/bin/bash
+
+{
+	
+	if grep -q "$3"
+	then
+		echo "OK: " $3 "is present"
+		exit 0
+	fi
+
+} < /proc/mounts
+
+
+echo "Mount: " $2 "is not present, searching for media..."
+		
+if ! test -L /dev/disk/by-label/$2
+then
+	echo "FATAL: Disk: " $2 "is not present, cannot continue..."
+			
+	exit 1
+fi
+		
+echo "Media is present, mounting:" $2
+		
+mkdir -p $3
+		
+if ! mount -t $1 /dev/disk/by-label/$2 $3
+then
+			
+	echo "FATAL: Mount failed, exiting."
+			
+	exit 1
+fi
+		
+echo "Mount succeeded..."
+		
+exit 0
+	

@@ -1,0 +1,4 @@
+FLASHTEMP_TARGET=/var/cache/flashtemp
+FLASHTEMP_SOURCE=/etc/toolscripts/flashtemp_template/nemo
+FLASHTEMP_SIZE=32M
+

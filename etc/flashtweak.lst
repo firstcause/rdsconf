@@ -1,0 +1,3 @@
+/var/lib/dhcp3			512K
+/var/lib/ntp			64K
+/var/lib/logrotate		128K

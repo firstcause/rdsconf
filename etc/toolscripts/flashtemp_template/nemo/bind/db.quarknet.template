@@ -1,7 +1,7 @@
 $ORIGIN .
 $TTL 604800	; 1 week
 quarknet		IN SOA	nemo.quarknet. sjm. (
-				11661      ; serial
+				11728      ; serial
 				604800     ; refresh (1 week)
 				86400      ; retry (1 day)
 				2419200    ; expire (4 weeks)
@@ -10,5 +10,5 @@ quarknet		IN SOA	nemo.quarknet. sjm. (
 			NS	nemo.quarknet.
 			A	10.7.247.10
 $ORIGIN quarknet.
-$TTL 43200	; 12 hours
+$TTL 21600	; 6 hours
 nemo			A	10.7.247.10

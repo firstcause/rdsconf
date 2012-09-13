@@ -1,32 +1,17 @@
 $ORIGIN .
 $TTL 604800	; 1 week
-quarknet		IN SOA	nemo.quarknet. sjm. (
+quarknet		IN SOA	aquarius.quarknet. sjm. (
 				11728      ; serial
 				604800     ; refresh (1 week)
 				86400      ; retry (1 day)
 				2419200    ; expire (4 weeks)
 				604800     ; minimum (1 week)
 				)
-			NS	nemo.quarknet.
+			NS	aquarius.quarknet.
 			A	10.7.247.10
 $ORIGIN quarknet.
-$TTL 21600	; 6 hours
-Aggie-PC		A	10.7.247.100
-			TXT	"31568a7edf611a83fe365f50ab4e370c9e"
-hadron			A	10.7.247.115
-			TXT	"00002982e39f338cc6846feeae5504d5f3"
-hp2600n			A	10.7.247.203
-			TXT	"00cc92b312717553a2a281b52375e9a1ff"
-kindle-ceacda90c	A	10.7.247.103
-			TXT	"0021a95f2af04bb9945dc641b745cd5e89"
-Kiri			A	10.7.247.101
-			TXT	"31248737dffb1fc21e82ef9932cbe73d85"
 $TTL 43200	; 12 hours
-nemo			A	10.7.247.10
-$TTL 21600	; 6 hours
-neytiri			A	10.7.247.102
-			TXT	"31b6749d70aa31d2aac6df3d58b3ee425b"
-SipuraSPA		A	10.7.247.107
-			TXT	"31d8df5733abf18702fc19e140b1523491"
-titan			A	10.7.247.106
-			TXT	"3143c0f4a5911fde2f5ba26570f7501a06"
+wanpoint		A	10.7.247.1
+aquarius		A	10.7.247.10
+darwin			A	10.7.247.12
+

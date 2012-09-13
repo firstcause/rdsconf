@@ -1,7 +1,7 @@
 $ORIGIN .
 $TTL 604800	; 1 week
 247.7.10.in-addr.arpa	IN SOA	nemo.quarknet. sjm. (
-				8194       ; serial
+				8243       ; serial
 				604800     ; refresh (1 week)
 				86400      ; retry (1 day)
 				2419200    ; expire (4 weeks)

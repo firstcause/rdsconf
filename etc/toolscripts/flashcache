@@ -10,7 +10,7 @@
 #                    placed in /etc/init.d.
 ### END INIT INFO
 
-# INSTALL WITH: sudo update-rc.d -n flashtemp defaults 15 95
+# INSTALL WITH: sudo update-rc.d -n flashcache defaults 15 95
 
 # Author: Foo Bar <foobar@baz.org>
 #
@@ -22,20 +22,21 @@
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Sets up tmps shadow folders for flash based systems"
-NAME=flashtemp
+NAME=flashcache
 DAEMON=/etc/toolscripts/$NAME
 DAEMON_ARGS="--options args"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
-FLASHTEMP_LOCK=/var/run/$NAME.lock
+FLASHCACHE_LOCK=/var/run/$NAME.lock
 FLASHTWEAK_DEBUG=1
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0
 
-FLASHTEMP_TARGET=/var/cache/flashtemp
-FLASHTEMP_SIZE=32M
-FLASHTEMP_SOURCE=/etc/toolscripts/flashtemp_templates/$(hostname)
+FLASHCACHE_SIZE=32M
+FLASHCACHE_CACHE=/var/cache/flashcache
+FLASHCACHE_TEMPLATE=/etc/toolscripts/flashcache_templates/$(hostname)
+FLASHCACHE_SYNC=/var/cache/flashcache_sync
 
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME.default ] && . /etc/default/$NAME.default
@@ -52,42 +53,66 @@ FLASHTEMP_SOURCE=/etc/toolscripts/flashtemp_templates/$(hostname)
 #
 do_start()
 {
-	if [ -e $FLASHTEMP_LOCK ];
+	if [ -e $FLASHCACHE_LOCK ];
 	then
 		log_daemon_msg "$NAME: Start requested but already running..."
 		return 0
 	fi
 
-	log_daemon_msg "Starting: Target folder: $FLASHTEMP_TARGET"
-	log_daemon_msg "Starting: Source folder: $FLASHTEMP_SOURCE"
-	log_daemon_msg "Starting:          size: $FLASHTEMP_SIZE"
+	log_daemon_msg "Starting:    CACHE folder: $FLASHCACHE_CACHE"
+	log_daemon_msg "Starting: TEMPLATE folder: $FLASHCACHE_TEMPLATE"
+	log_daemon_msg "Starting:     SYNC folder: $FLASHCACHE_SYNC"
+	log_daemon_msg "Starting:            size: $FLASHCACHE_SIZE"
 
-	if mkdir -p $FLASHTEMP_TARGET
+	if mkdir -p $FLASHCACHE_CACHE
 	then
-		if mount -t tmpfs -o size=$FLASHTEMP_SIZE,mode=755 tmpfs $FLASHTEMP_TARGET
+		if mount -t tmpfs -o size=$FLASHCACHE_SIZE,mode=755 tmpfs $FLASHCACHE_CACHE
 		then
-			log_daemon_msg "Target folder mounted at: $FLASHTEMP_TARGET"
-		
-			if rsync -ap $FLASHTEMP_SOURCE/* $FLASHTEMP_TARGET 
+			log_daemon_msg "CACHE folder mounted at: $FLASHCACHE_CACHE"
+			
+			if [ -e $FLASHCACHE_SYNC ];
 			then
-				log_daemon_msg "File sync SUCCESS: $FLASHTEMP_TARGET"
+				log_daemon_msg "Found SYNC folder at: $FLASHCACHE_SYNC"
 				
-				if [ -z $FLASHTEMP_DEBUG ]
+				if rsync -ap $FLASHCACHE_SYNC/* $FLASHCACHE_CACHE 
 				then
-					touch $FLASHTEMP_LOCK
-				fi
+					log_daemon_msg "SUCCESS: Restored SYNC folder: $FLASHCACHE_SYNC"
 				
-				return 0
+					if [ -z $FLASHCACHE_DEBUG ]
+					then
+						touch $FLASHCACHE_LOCK
+					fi
+				
+					return 0
+				else
+					log_daemon_msg "FAILED: During restore of SYNC folder: $FLASHCACHE_SYNC"
+					return 1
+				fi
+			
 			else
-				log_daemon_msg "File sync FAILED: $FLASHTEMP_TARGET"
-				return 1
+
+				if rsync -ap $FLASHCACHE_TEMPLATE/* $FLASHCACHE_CACHE 
+				then
+					log_daemon_msg "File sync SUCCESS: $FLASHCACHE_CACHE"
+				
+					if [ -z $FLASHCACHE_DEBUG ]
+					then
+						touch $FLASHCACHE_LOCK
+					fi
+				
+					return 0
+				else
+					log_daemon_msg "File sync FAILED: $FLASHCACHE_CACHE"
+					return 1
+				fi
 			fi
+		
 		else
-			log_daemon_msg "Couldn't mount at: $FLASHTEMP_TARGET"
+			log_daemon_msg "Couldn't mount at: $FLASHCACHE_CACHE"
 			return 1
 		fi
 	else
-		log_daemon_msg "mkdir failed for target: $FLASHTEMP_TARGET"
+		log_daemon_msg "mkdir failed for CACHE folder: $FLASHCACHE_CACHE"
 		return 1
 	fi
              	
@@ -99,18 +124,16 @@ do_start()
 #
 do_stop()
 {
-	if [ ! -e $FLASHTEMP_LOCK ] && [ -z $FLASHTEMP_DEBUG ];
+	if [ ! -e $FLASHCACHE_LOCK ] && [ -z $FLASHCACHE_DEBUG ];
 	then
 		log_daemon_msg "$NAME: Stop requested but not running..."
 		return 0
 	fi
 	
-	rsync -ap $FLASHTEMP_TARGET/* $FLASHTEMP_SOURCE
-	
-	umount $FLASHTEMP_TARGET
-
-	rm -f $FLASHTEMP_LOCK
-
+	mkdir -p $FLASHCACHE_SYNC
+	rsync -ap $FLASHCACHE_CACHE/* $FLASHCACHE_SYNC
+	umount $FLASHCACHE_CACHE
+	rm -f $FLASHCACHE_LOCK
 	return 0
 }
 
@@ -121,9 +144,9 @@ do_reload() {
 	return 0
 }
 
-echo "Verbose: $VERBOSE"
-
 VERBOSE=yes
+
+echo "Verbose: $VERBOSE"
 
 case "$1" in
   start)

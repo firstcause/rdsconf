@@ -1,5 +1,5 @@
 options {
-	directory "/var/cache/flashtemp/bind";
+	directory "/var/cache/flashcache/bind";
 	flush-zones-on-shutdown yes;
 	
 	// If there is a firewall between you and nameservers you want

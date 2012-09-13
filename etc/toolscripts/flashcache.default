@@ -1,0 +1,5 @@
+FLASHCACHE_CACHE=/var/cache/flashcache
+FLASHCACHE_SYNC=/var/cache/flashcache_synched
+FLASHCACHE_TEMPLATE=/etc/toolscripts/flashcache_template/aquarius
+FLASHCACHE_SIZE=64M
+
